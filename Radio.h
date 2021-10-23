@@ -11,6 +11,8 @@
 #include "Sensor.h"
 #include "XcisFlowMeter.h"
 #include "XcisRainGauge.h"
+#include "XcisTrough.h"
+#include "XcisTank.h"
 
 #define RH_HAVE_SERIAL
 // Digital PIN for LORA Active

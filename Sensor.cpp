@@ -1,12 +1,6 @@
 #include "Sensor.h"
 Sensor::Sensor()
 {
-
-
-}
-void Sensor::sayHello()
-{
-    Serial.println("Sensor::Hello");
 }
 uint16_t Sensor::getVoltageBytes()
 {

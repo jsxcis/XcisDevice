@@ -26,11 +26,13 @@ void Device::initialise(String board)
         case TANK: // 000
         {
             Serial.println("DeviceConfiguration=TANK");
+            pSensor = new XcisTank();
             break;
         }
         case TROUGH: // 001
         {
             Serial.println("DeviceConfiguration=TROUGH");
+             pSensor = new XcisTrough();
              break;
         }
         case BORE_CONTROLLER: //010
@@ -66,24 +68,6 @@ void Device::initialise(String board)
             break;
         }
     }
-    /*
-    deviceType = 1;
-
-    if (deviceType == 1)
-    {
-        Serial.println("Initialising RainGauge");
-        pSensor = new XcisRainGauge();
-    }
-    else if (deviceType == 2)
-    {
-        pSensor = new XcisFlowMeter();
-    }
-    else
-    {
-        pSensor = NULL;
-    }
-    */
-    //Sensor *pSensor = getSensor();
     pSensor->initialise();
     Radio::Instance()->initialise();
     digitalWrite(STATUS,1);// LED 
