@@ -1,9 +1,19 @@
 #include "Device.h"
 
+Device* Device::m_pInstance = NULL;
+
 Device::Device()
 {
+    uid_d = 0x00000000;
 
-
+}
+Device* Device::Instance()
+{
+  if (!m_pInstance)
+  {
+      m_pInstance = new Device;
+  }
+  return m_pInstance;
 }
 void Device::sayHello()
 {
@@ -16,12 +26,17 @@ void Device::initialise(String board)
     pinMode(STATUS,OUTPUT); 
     digitalWrite(STATUS,0);// LED off
     
+    
     uid.initialise();
-    uid.readUIDManufacturer();
-    uid.readDeviceCode();
-    uid.readStatusReg();
-    uid.readID();
-    switch(readDIPSwitches())
+    pmem.initialise();
+    //pmem.reset(); // remove this line - testing only
+    pmem.setLoraID(0x04);
+    Serial.println(pmem.getInitState());
+
+    uid_d = uid.readID();
+    deviceType = readDIPSwitches();
+   
+    switch(deviceType)
     {
         case TANK: // 000
         {
@@ -54,6 +69,7 @@ void Device::initialise(String board)
         case FENCE: //101
         {
             Serial.println("DeviceConfiguration=FENCE");
+            pSensor = new XcisFence();
             break;
         }
         case FLOW_METER: //110
@@ -69,7 +85,7 @@ void Device::initialise(String board)
         }
     }
     pSensor->initialise();
-    Radio::Instance()->initialise();
+    Radio::Instance()->initialise(pmem.getLoraID());
     digitalWrite(STATUS,1);// LED 
     Serial.print(F("Ready"));
     Serial.print(" Board:");

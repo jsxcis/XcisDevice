@@ -9,10 +9,12 @@
 #include <EEPROM.h>
 #include <XcisMessage.h>
 #include "Sensor.h"
-#include "XcisFlowMeter.h"
-#include "XcisRainGauge.h"
-#include "XcisTrough.h"
-#include "XcisTank.h"
+#include "Device.h"
+//#include "XcisFlowMeter.h"
+//#include "XcisRainGauge.h"
+//#include "XcisTrough.h"
+//#include "XcisTank.h"
+//#include "XcisFence.h"
 
 #define RH_HAVE_SERIAL
 // Digital PIN for LORA Active
@@ -38,7 +40,7 @@ class Radio
     static Radio* Instance();
 
     void sayHello();
-    void initialise();
+    void initialise(uint8_t loraID);
     void onReceive(Sensor *pSensor);
     XcisMessage xcisMessage;
 
@@ -48,6 +50,7 @@ class Radio
     Radio(Radio const&){};
 
     static Radio* m_pInstance;
+    RHMesh *manager;
     
     void setLoraDefault();
     void setLoraInitialised();

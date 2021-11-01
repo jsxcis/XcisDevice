@@ -6,10 +6,6 @@ UID::UID()
 
 
 }
-void UID::sayHello()
-{
-    Serial.println("UID::Hello");
-}
 void UID::initialise()
 {
     Serial.println("UID::initialiseUID");
@@ -96,7 +92,8 @@ void UID::readStatusReg()
   Serial.println(bitRead(resp, 7));
   digitalWrite(SLAVESELECT, HIGH);
 }
-void UID::readID()
+
+uint32_t UID::readID()
 {
   unsigned int addr;
   unsigned int one;
@@ -105,6 +102,9 @@ void UID::readID()
   unsigned int four;
   unsigned int five;
   unsigned int six;
+  uint8_t data[8];
+  uint32_t result;
+
   Serial.println("Read Serial number memory map");
  
   digitalWrite(SLAVESELECT, LOW);
@@ -113,19 +113,39 @@ void UID::readID()
   delay(10);  
   SPI.transfer(0xFA);
   delay(10);
-  one = SPI.transfer(0x00);
-  Serial.println(one,HEX);
-  two = SPI.transfer(0x00);
-  Serial.println(two,HEX);
-  three = SPI.transfer(0x00);
-  Serial.println(three,HEX);
-  four = SPI.transfer(0x00);
-  Serial.println(four,HEX);
-  five = SPI.transfer(0x00);
-  Serial.println(five,HEX);
-  six = SPI.transfer(0x00);
-  Serial.println(six,HEX);
 
+  one = SPI.transfer(0x00);
+  data[0] = one;
+  //Serial.println(one,HEX);
+  
+  two = SPI.transfer(0x00);
+  data[1] = two;
+  //Serial.println(two,HEX);
+  
+  three = SPI.transfer(0x00);
+  data[2] = three;
+  //Serial.println(three,HEX);
+  
+  four = SPI.transfer(0x00);
+  data[3] = four;
+  //Serial.println(four,HEX);
+  
+  five = SPI.transfer(0x00);
+  //Serial.println(five,HEX);
+  data[4] = five;
+  
+  six = SPI.transfer(0x00);
+  //Serial.println(six,HEX);
+  data[5] = six;
+
+  result = (uint32_t)data[2] << 24 |
+           (uint32_t)data[3] << 16 |
+           (uint32_t)data[4] << 8 |
+           (uint32_t)data[5];
+
+  Serial.println(result,HEX);
+    
   digitalWrite(SLAVESELECT, HIGH);
+  return result;
 
 }

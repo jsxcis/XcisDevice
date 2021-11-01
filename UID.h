@@ -26,8 +26,7 @@ class UID
     void readUIDManufacturer();
     void readDeviceCode();
     void readStatusReg();
-    void readID();
-    void sayHello();
+    uint32_t readID();
 
     private:
     byte inBuffer[9]; // eeprom data in

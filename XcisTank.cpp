@@ -15,7 +15,6 @@ void XcisTank::initialise()
     delayRunning = true; // not finished yet
     usonic_tank.begin(9600);
 }
-
 void XcisTank::execute()
 {
     

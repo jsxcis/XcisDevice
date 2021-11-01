@@ -26,7 +26,7 @@ class XcisRainGauge : public Sensor {
         uint32_t accumulatedDataToken;
         int inputState;
         int lastInputState;
-        XcisMessage xcisMessage;
+        //XcisMessage xcisMessage;
 
 };
 #endif

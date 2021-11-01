@@ -1,18 +1,16 @@
 // Lora Radio
 #include "Radio.h"
 
-
 Radio* Radio::m_pInstance = NULL;
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
-RHMesh manager(rf95, 4);
+
+//RHMesh manager(rf95, 4);
 
 Radio::Radio()
 {
     address = 0; // For EEPROM
     
-    node_id_default = "04"; // Default Lora ID
-    node_id_mesh_default = 4; // Default Lora ID
 
 }
 Radio* Radio::Instance()
@@ -27,12 +25,13 @@ void Radio::sayHello()
 {
     Serial.println("Radio::Hello");
 }
-void Radio::initialise()
+void Radio::initialise(uint8_t loraID)
 {
-    Serial.println("Radio::initialise");
- 
+    Serial.print("Radio::initialise with loraID:");
+    Serial.println(loraID);
+
     pinMode(LORA,OUTPUT); 
-    digitalWrite(LORA,0);// Green LED off
+    digitalWrite(LORA,1);//  LED off
     
     pinMode(RFM95_RST, OUTPUT); // LORA RESET
     digitalWrite(RFM95_RST, 1);
@@ -41,17 +40,17 @@ void Radio::initialise()
     delay(10);
     digitalWrite(RFM95_RST, 1);
     delay(10);
-
-    if (!manager.init())
+    manager = new RHMesh(rf95, loraID);
+    if (!manager->init())
     {
       Serial.println(F("Radio init failed"));
+      digitalWrite(LORA,1);//  LED OFF
     }
     else
     {
       Serial.println("Radio initialised");
+      digitalWrite(LORA,0);//  LED OFF
     }
-    
-    digitalWrite(LORA,0);// Green LED OFF
 }
 void Radio::onReceive(Sensor *pSensor)
 {
@@ -59,19 +58,37 @@ void Radio::onReceive(Sensor *pSensor)
   uint8_t len = sizeof(buf);
   uint8_t from;
   uint8_t responseData[32];
+
   
-  if (manager.recvfromAck(buf, &len, &from))
+  if (manager->recvfromAck(buf, &len, &from))
   {
     // Assume message is for me.
     digitalWrite(LORA,1); 
     Serial.print("onReceive()");
     //Serial.println((char*)buf);
     xcisMessage.dumpHex(buf,sizeof(buf));
-    
-    pSensor->processMessage(buf,responseData);
-  
-    manager.sendtoWait(responseData, sizeof(responseData), from);   
-    
+    xcisMessage.processMessage(buf);
+    Serial.print("Radio::onReceive() Command:");
+    Serial.println(xcisMessage.getCommand(),HEX);
+    if (xcisMessage.getCommand() == STATUS_REQUEST)
+    { 
+      // This is a broadcast message to check for new devices
+      Serial.println("Device Received:STATUS_REQUEST");
+      // Check if initialised
+      // if not - return STATUS_NEW + UID + DEVICE_TYPE
+      xcisMessage.createStatusPayload(STATUS_RESPONSE, Device::Instance()->getUID(),Device::Instance()->getDeviceType() );
+      xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), Device::Instance()->getDeviceType(), STATUS_RESPONSE);
+      manager->sendtoWait(responseData, sizeof(responseData), from);
+      Serial.print("Response:");
+      xcisMessage.dumpHex(responseData,XCIS_RH_MESH_MAX_MESSAGE_LEN);
+    }
+    else
+    {
+
+      pSensor->processMessage(buf,responseData);
+      manager->sendtoWait(responseData, sizeof(responseData), from);
+
+    }
     digitalWrite(LORA,0);
   }
   return;

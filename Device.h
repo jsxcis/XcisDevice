@@ -5,6 +5,12 @@
 #include "UID.h"
 #include "Radio.h"
 #include "Sensor.h"
+#include "XcisFlowMeter.h"
+#include "XcisRainGauge.h"
+#include "XcisTrough.h"
+#include "XcisTank.h"
+#include "XcisFence.h"
+#include "pmem.h"
 
 
 // Configuration switch
@@ -32,19 +38,28 @@
 class Device
 {
     public:
-    Device();
+    static Device* Instance();
+  
     void sayHello();
     void initialise(String board);
     void onReceive();
     void execute();
-
+    uint8_t getDeviceType() {return deviceType;}
     Sensor* getSensor() {return pSensor;}
+    uint32_t getUID(){return uid_d;}
 
     private:
+    Device();
+    Device(Device const&){};
+    static Device* m_pInstance;
+
     UID uid;
+    PMEM pmem;
     uint8_t readDIPSwitches();
     Sensor *pSensor;
     uint8_t deviceType;
+    uint8_t loraID;
+    uint32_t uid_d;
 
    
 };

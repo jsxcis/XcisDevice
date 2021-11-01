@@ -23,7 +23,7 @@ class XcisTrough : public Sensor {
 
         bool delayRunning; // true if still waiting for delay to finish
          
-        XcisMessage xcisMessage;
+        //XcisMessage xcisMessage;
 
 };
 #endif
