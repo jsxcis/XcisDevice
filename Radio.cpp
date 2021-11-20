@@ -76,11 +76,15 @@ void Radio::onReceive(Sensor *pSensor)
       Serial.println("Device Received:STATUS_REQUEST");
       // Check if initialised
       // if not - return STATUS_NEW + UID + DEVICE_TYPE
-      xcisMessage.createStatusPayload(STATUS_RESPONSE, Device::Instance()->getUID(),Device::Instance()->getDeviceType() );
-      xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), Device::Instance()->getDeviceType(), STATUS_RESPONSE);
-      manager->sendtoWait(responseData, sizeof(responseData), from);
-      Serial.print("Response:");
-      xcisMessage.dumpHex(responseData,XCIS_RH_MESH_MAX_MESSAGE_LEN);
+      if (Device::Instance()->getLoraInitState() == false)
+      {
+        Serial.println("Device not initialised!! - sending device data");
+        xcisMessage.createStatusPayload(STATUS_RESPONSE, Device::Instance()->getUID(),Device::Instance()->getDeviceType() );
+        xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), Device::Instance()->getDeviceType(), STATUS_RESPONSE);
+        manager->sendtoWait(responseData, sizeof(responseData), from);
+        Serial.print("Response:");
+        xcisMessage.dumpHex(responseData,XCIS_RH_MESH_MAX_MESSAGE_LEN);
+      }
     }
     else
     {

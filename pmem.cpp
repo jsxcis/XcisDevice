@@ -54,7 +54,7 @@ void PMEM::reset()
 {
     Serial.println("PMEM::reset()");
     lorastate ls;
-    ls.loraID = 0x00;
+    ls.loraID = 0xFE;
     ls.initFlag = 0x00;
     //EEPROM.write(addr,ls.loraID);
     //EEPROM.write(addr + sizeof(ls.loraID),ls.initFlag);

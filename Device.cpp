@@ -26,13 +26,13 @@ void Device::initialise(String board)
     pinMode(STATUS,OUTPUT); 
     digitalWrite(STATUS,0);// LED off
     
-    
     uid.initialise();
     pmem.initialise();
-    //pmem.reset(); // remove this line - testing only
-    pmem.setLoraID(0x04);
-    Serial.println(pmem.getInitState());
+    pmem.reset(); // remove this line - testing only
+    pmem.setLoraID(0x06);
+   
 
+    Serial.println(pmem.getInitState());
     uid_d = uid.readID();
     deviceType = readDIPSwitches();
    
