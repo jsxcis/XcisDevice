@@ -59,7 +59,6 @@ void XcisFence::processMessage(uint8_t *data , uint8_t *responseData)
     }
    
 }
-
 void XcisFence::readDataStream()
 {
   String data = "";

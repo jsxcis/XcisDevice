@@ -31,7 +31,7 @@ void Radio::initialise(uint8_t loraID)
     Serial.println(loraID);
 
     pinMode(LORA,OUTPUT); 
-    digitalWrite(LORA,1);//  LED off
+    digitalWrite(LORA,0);//  LED off
     
     pinMode(RFM95_RST, OUTPUT); // LORA RESET
     digitalWrite(RFM95_RST, 1);
@@ -49,7 +49,7 @@ void Radio::initialise(uint8_t loraID)
     else
     {
       Serial.println("Radio initialised");
-      digitalWrite(LORA,0);//  LED OFF
+      digitalWrite(LORA,1);//  LED OFF
     }
 }
 void Radio::onReceive(Sensor *pSensor)
@@ -63,7 +63,7 @@ void Radio::onReceive(Sensor *pSensor)
   if (manager->recvfromAck(buf, &len, &from))
   {
     // Assume message is for me.
-    digitalWrite(LORA,1); 
+    digitalWrite(LORA,0); 
     Serial.print("onReceive()");
     //Serial.println((char*)buf);
     xcisMessage.dumpHex(buf,sizeof(buf));
@@ -88,12 +88,10 @@ void Radio::onReceive(Sensor *pSensor)
     }
     else
     {
-
       pSensor->processMessage(buf,responseData);
       manager->sendtoWait(responseData, sizeof(responseData), from);
-
     }
-    digitalWrite(LORA,0);
+    digitalWrite(LORA,1);
   }
   return;
 }

@@ -18,7 +18,7 @@
 
 #define RH_HAVE_SERIAL
 // Digital PIN for LORA Active
-#define LORA 1 // LED
+#define LORA A2 // LED
 
 #ifdef ARDUINO_AVR_UNO
 #define RFM95_CS 10
@@ -29,6 +29,10 @@
 #define RFM95_RST 9
 #define RFM95_INT 2
 #elif __AVR_ATmega1284P__
+#define RFM95_CS 4
+#define RFM95_RST 3 //was 1 which was wrong
+#define RFM95_INT 2
+#elif __AVR_ATmega1284__
 #define RFM95_CS 4
 #define RFM95_RST 3 //was 1 which was wrong
 #define RFM95_INT 2

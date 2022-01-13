@@ -24,12 +24,15 @@ void Device::initialise(String board)
     Serial.println("Device::initialise:" + board);
     randomSeed(analogRead(0)); // Seed the random number generator
     pinMode(STATUS,OUTPUT); 
-    digitalWrite(STATUS,0);// LED off
+    digitalWrite(STATUS,1);// LED off
+
+    pinMode(SENSOR_STATUS,OUTPUT);
+    digitalWrite(SENSOR_STATUS,0); // LED ON
     
     uid.initialise();
     pmem.initialise();
     pmem.reset(); // remove this line - testing only
-    pmem.setLoraID(0x06);
+    pmem.setLoraID(0x18);
    
 
     Serial.println(pmem.getInitState());
@@ -38,41 +41,43 @@ void Device::initialise(String board)
    
     switch(deviceType)
     {
-        case TANK: // 000
+        case TANK: // 000 SW 111
         {
             Serial.println("DeviceConfiguration=TANK");
             pSensor = new XcisTank();
             break;
         }
-        case TROUGH: // 001
+        case TROUGH: // 001 SW 011
         {
             Serial.println("DeviceConfiguration=TROUGH");
              pSensor = new XcisTrough();
              break;
         }
-        case BORE_CONTROLLER: //010
+        case BORE_CONTROLLER: //010 SW 101
         {
             Serial.println("DeviceConfiguration=BORE_CONTROLLER");
-             break;
+            pSensor = new XcisBore();
+            break;
         }
         case WEATHER_SENSOR: //011
         {
             Serial.println("DeviceConfiguration=WEATHER_SENSOR");
+             // CAUTION NOT IMPLEMENTED
              break;
         }
-        case RAIN_GAUGE: //100
+        case RAIN_GAUGE: //100 SW 110
         {
             Serial.println("DeviceConfiguration=RAIN_GAUGE");
             pSensor = new XcisRainGauge();
             break;
         }
-        case FENCE: //101
+        case FENCE: //101 SW 010
         {
             Serial.println("DeviceConfiguration=FENCE");
             pSensor = new XcisFence();
             break;
         }
-        case FLOW_METER: //110
+        case FLOW_METER: //110 SW 100
         {
             Serial.println("DeviceConfiguration=FLOW_METER");
             pSensor = new XcisFlowMeter();
@@ -81,12 +86,13 @@ void Device::initialise(String board)
         default:
         {
             Serial.println("DeviceConfiguration=UNKNOWN");
+             // CAUTION NOT IMPLEMENTED
             break;
         }
     }
     pSensor->initialise();
     Radio::Instance()->initialise(pmem.getLoraID());
-    digitalWrite(STATUS,1);// LED 
+    digitalWrite(STATUS,0);// LED ON
     Serial.print(F("Ready"));
     Serial.print(" Board:");
     Serial.println(board);  

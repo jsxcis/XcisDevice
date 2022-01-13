@@ -6,6 +6,7 @@
 // Analog PIN for Battery input
 #define BATTERY_VOLTAGE A0
 
+
 class Sensor {
     public:
         Sensor();

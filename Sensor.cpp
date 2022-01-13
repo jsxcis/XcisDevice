@@ -1,6 +1,8 @@
 #include "Sensor.h"
 Sensor::Sensor()
 {
+    pinMode(BATTERY_VOLTAGE,INPUT);
+  
 }
 uint16_t Sensor::getVoltageBytes()
 {

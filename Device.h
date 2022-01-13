@@ -10,6 +10,7 @@
 #include "XcisTrough.h"
 #include "XcisTank.h"
 #include "XcisFence.h"
+#include "XcisBore.h"
 #include "pmem.h"
 
 
@@ -32,7 +33,9 @@
 #define SLAVESELECT 10//PD2
 //#define HOLD 9 // Not used
 
-#define STATUS 0 // STATUS LED - DEVICE ACTIVE
+#define STATUS A1 // STATUS LED - DEVICE ACTIVE
+// Analog LED for Sensor Status
+#define SENSOR_STATUS A3 // STATUS LED - DEVICE ACTIVE
 
 
 class Device
