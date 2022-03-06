@@ -84,7 +84,7 @@ void XcisBore::execute()
 }
 void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
 {
-    uint8_t recvPayload[28];
+    uint8_t recvPayload[26];
 
     Serial.print("XcisBore::processMessage:");
     xcisMessage.dumpHex(data,XCIS_RH_MESH_MAX_MESSAGE_LEN);
@@ -95,9 +95,11 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
     Serial.print(xcisMessage.getDeviceType(),HEX);
     Serial.print(" Command:");
     Serial.print(xcisMessage.getCommand(),HEX);
+    Serial.print(" CRC:");
+    Serial.print(xcisMessage.getCRC(),HEX);
     xcisMessage.getPayload(recvPayload);
     Serial.print(" Payload:");
-    xcisMessage.dumpHex(recvPayload,28);
+    xcisMessage.dumpHex(recvPayload,26);
     if (xcisMessage.getCommand() == SENSOR_DATA_REQUEST)
     { 
       Serial.println("Received:SENSOR_DATA_REQUEST");
@@ -151,15 +153,16 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
     Serial.print("XcisBore::readCurrentValue:");
     // Code to get the analog input value measuring current
     currentValue = analogRead(CURRENT); // Read current
+    currentValue = 0; // Not working
     Serial.println(currentValue);
  }
 void XcisBore::turnOn()
 {
-     Serial.println("XcisBore::turnOn:");
-     // Code to switch the bore 
-     digitalWrite(ON_RELAY, HIGH);         // turn the Bore Shield Relay (D22) ON
-     delay(duration);
-     digitalWrite(ON_RELAY, LOW);         // turn the Bore Shield Relay (D22) off
+    Serial.println("XcisBore::turnOn:");
+    // Code to switch the bore 
+    digitalWrite(ON_RELAY, HIGH);         // turn the Bore Shield Relay (D22) ON
+    delay(duration);
+    digitalWrite(ON_RELAY, LOW);         // turn the Bore Shield Relay (D22) off
     boreRunning = 1; // Need to override this with a test on startup to check on bore state. Use Current?
 }
 void XcisBore::turnOff()

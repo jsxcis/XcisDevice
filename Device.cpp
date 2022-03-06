@@ -32,7 +32,7 @@ void Device::initialise(String board)
     uid.initialise();
     pmem.initialise();
     pmem.reset(); // remove this line - testing only
-    pmem.setLoraID(0x18);
+    pmem.setLoraID(0x15); // Decimal 21
    
 
     Serial.println(pmem.getInitState());
