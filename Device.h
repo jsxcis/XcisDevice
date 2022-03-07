@@ -38,6 +38,7 @@
 #define SENSOR_STATUS A3 // STATUS LED - DEVICE ACTIVE
 
 
+
 class Device
 {
     public:

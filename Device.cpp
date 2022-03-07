@@ -28,11 +28,11 @@ void Device::initialise(String board)
 
     pinMode(SENSOR_STATUS,OUTPUT);
     digitalWrite(SENSOR_STATUS,0); // LED ON
-    
+        
     uid.initialise();
     pmem.initialise();
     pmem.reset(); // remove this line - testing only
-    pmem.setLoraID(0x15); // Decimal 21
+    pmem.setLoraID(0x16); // Decimal 22
    
 
     Serial.println(pmem.getInitState());

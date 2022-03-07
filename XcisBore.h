@@ -13,6 +13,11 @@
 #define BORE_ON_SW 18 // Input to switch bore on
 #define BORE_OFF_SW 19 // Input to switch bore off
 
+#define BORE_OFF_LED 0 // LED indicator for OFF state
+#define BORE_ON_LED 1 // LED indicator for ON state
+
+#define CURRENT_THRESHOLD 20 // Threshold to excuse noise
+
 class XcisBore : public Sensor {
     public:
         XcisBore();
@@ -26,13 +31,16 @@ class XcisBore : public Sensor {
         void turnOff();
         void storePulseCount();
         void countPulses();
+        void displayStatus();
+        void calculateStatus();
         unsigned long delayStart; // the time the delay started
         unsigned long delayStartPulse;
 
         bool delayRunning; // true if still waiting for delay to finish
         uint16_t pulseCount;
         uint16_t currentValue;
-        uint8_t boreRunning; // true if the bore is running
+        uint8_t boreState; // true if the bore is running 0 = off, 1= running
+        uint8_t boreStatus; // true if the bore is running 0 = off, 1= running, 2 = run_err_current, 3 = run_err_flow, 4 = run_err
         uint16_t accumulatedPulses;
         uint32_t accumulatedDataToken;
         uint16_t duration;

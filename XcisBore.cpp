@@ -5,16 +5,17 @@ XcisBore::XcisBore()
 {
     currentValue = 0;
     // Need to override this with a test on startup to check on bore state. Use Current?
-    boreRunning = 0;
+    boreState = 0;
+    boreStatus = 0;
     delayStart = 0;   // start delay
     delayStartPulse = 0;   // start delay
     delayRunning = 0; // not finished yet
     inputState_D20 = 0;
-    lastInputState_D20 = 0;
-    inputState_D18;
-    lastInputState_D18;
-    inputState_D19;
-    lastInputState_D19;
+    lastInputState_D20 = 1; // active low
+    inputState_D18 = 0;
+    lastInputState_D18 = 1; // active low
+    inputState_D19 = 0;
+    lastInputState_D19 = 1; // active low
 
     pulseCount = 0x00;
     accumulatedPulses = 0x0000;
@@ -34,7 +35,16 @@ void XcisBore::initialise()
     pinMode(ON_RELAY, OUTPUT); //RELAY (D22) NOTE:(D22) on PCB
     pinMode(OFF_RELAY, OUTPUT); //RELAY (D23) NOTE:(D23) on PCB
     pinMode(BORE_ON_SW,INPUT); // Bore On Input
-    pinMode(BORE_OFF_SW, INPUT); // Bore Off Input       
+    pinMode(BORE_OFF_SW, INPUT); // Bore Off Input
+    pinMode(BORE_OFF_LED,OUTPUT);
+    pinMode(BORE_ON_LED,OUTPUT);
+
+    digitalWrite(BORE_ON_LED,1); // LED OFF
+    digitalWrite(BORE_OFF_LED,1); // LED OFF
+    pulseCount = 0x00;
+    currentValue = 0;
+    boreState = 0;
+    boreStatus = 0;
 }
 
 void XcisBore::execute()
@@ -75,12 +85,13 @@ void XcisBore::execute()
     }
     lastInputState_D19 = inputState_D19;
 
-
     if (delayRunning && ((millis() - delayStartPulse) >= 900000))// 15 mins 
     {
         delayStartPulse += 900000; // 15 mins - normal value
         storePulseCount();
     }
+    calculateStatus();
+    displayStatus();
 }
 void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
 {
@@ -110,8 +121,8 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
       readCurrentValue();
       Serial.print("Current value:");
       Serial.println(currentValue,HEX);
-      Serial.print("Bore State:");
-      Serial.println(boreRunning,HEX);
+      Serial.print("Bore Status:");
+      Serial.println(boreStatus,HEX);
 
       Serial.print("Pulses Integer:");
       Serial.println(accumulatedPulses);
@@ -123,7 +134,7 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
       Serial.print("accumulatedDataToken Hex:");
       Serial.println(accumulatedDataToken,HEX);
 
-      xcisMessage.createBorePayload(SENSOR_DATA_RESPONSE, battery, currentValue, accumulatedPulses, accumulatedDataToken, boreRunning);  
+      xcisMessage.createBorePayload(SENSOR_DATA_RESPONSE, battery, currentValue, accumulatedPulses, accumulatedDataToken, boreStatus);  
       xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), BORE_CONTROLLER, SENSOR_DATA_RESPONSE);
   
       Serial.print("Response:");
@@ -153,7 +164,7 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
     Serial.print("XcisBore::readCurrentValue:");
     // Code to get the analog input value measuring current
     currentValue = analogRead(CURRENT); // Read current
-    currentValue = 0; // Not working
+    currentValue = 100; // Not working
     Serial.println(currentValue);
  }
 void XcisBore::turnOn()
@@ -163,16 +174,20 @@ void XcisBore::turnOn()
     digitalWrite(ON_RELAY, HIGH);         // turn the Bore Shield Relay (D22) ON
     delay(duration);
     digitalWrite(ON_RELAY, LOW);         // turn the Bore Shield Relay (D22) off
-    boreRunning = 1; // Need to override this with a test on startup to check on bore state. Use Current?
+    boreState = 1; // Need to override this with a test on startup to check on bore state. Use Current?
+    //digitalWrite(BORE_ON_LED,0); // LED ON
+    //digitalWrite(BORE_OFF_LED,1); // LED OFF
 }
 void XcisBore::turnOff()
 {
      Serial.println("XcisBore::turnOff:");
      // Code to switch the bore OFF
-      digitalWrite(OFF_RELAY, HIGH);         // turn the Bore Shield Relay (D23) ON
-      delay(duration);
-      digitalWrite(OFF_RELAY, LOW);         // turn the Bore Shield Relay (D23) off
-      boreRunning = 0;
+    digitalWrite(OFF_RELAY, HIGH);         // turn the Bore Shield Relay (D23) ON
+    delay(duration);
+    digitalWrite(OFF_RELAY, LOW);         // turn the Bore Shield Relay (D23) off
+    boreState = 0;
+    //digitalWrite(BORE_ON_LED,1); // LED OFF
+    //digitalWrite(BORE_OFF_LED,0); // LED O
 }
 void XcisBore::countPulses()
 {
@@ -189,4 +204,58 @@ void XcisBore::storePulseCount()
     Serial.print(accumulatedPulses);
     Serial.print(",");
     Serial.println(accumulatedDataToken);
+}
+// if the bore is running 0 = off, 1= running, 2 = run_err_current, 3 = run_err_flow, 4 = run_err
+void XcisBore::calculateStatus()
+{
+
+    if ((boreState == 0 ))
+    {
+        boreStatus = 0;
+    }
+    else if ((boreState == 1) && (currentValue > CURRENT_THRESHOLD) && (pulseCount > 0))  // RUNNING OK 111
+    {
+        boreStatus = 1;
+    }
+    else if ((boreState == 1) && (currentValue < CURRENT_THRESHOLD) && (pulseCount > 0))  // RUNNING OK CURRENT_ERR 101
+    {
+        boreStatus = 2;
+    }
+    else if ((boreState == 1) && (currentValue > CURRENT_THRESHOLD) && (pulseCount == 0))  // RUNNING OK FLOW_ERR 110
+    {
+        boreStatus = 3;
+    }
+    else // Running but have a general err - both current and flow not working
+    {
+        boreStatus = 4;
+    }
+}
+void XcisBore::displayStatus()
+{
+    if (boreStatus == 0) // STOPPED
+    {
+        digitalWrite(BORE_ON_LED,1); // LED OFF
+        digitalWrite(BORE_OFF_LED,0); // LED O
+    }
+    else if(boreStatus == 1) // RUNNING OK
+    {
+        digitalWrite(BORE_ON_LED,0); // LED ON
+        digitalWrite(BORE_OFF_LED,1); // LED OFF
+    }
+    else if(boreStatus == 2) // RUNNING WITH CURRENT ERR
+    {
+        digitalWrite(BORE_ON_LED,0); // LED ON
+        digitalWrite(BORE_OFF_LED,0); // LED  ON
+    }
+    else if(boreStatus == 3) // RUNNING with FLOW ERR
+    {
+        digitalWrite(BORE_ON_LED,0); // LED ON
+        digitalWrite(BORE_OFF_LED,0); // LED ON
+    }
+    else if(boreStatus == 4) // RUNNING with GENERAL ERR (should flash) current and flow not working
+    {
+        digitalWrite(BORE_ON_LED,0); // LED ON 
+        digitalWrite(BORE_OFF_LED,0); // LED ON
+    }
+
 }
