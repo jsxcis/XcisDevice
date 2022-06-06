@@ -5,7 +5,7 @@ XcisBore::XcisBore()
 {
     currentValue = 0;
     // Need to override this with a test on startup to check on bore state. Use Current?
-    boreState = 0;
+    local_boreState = 0;
     boreStatus = 0;
     delayStart = 0;   // start delay
     delayStartPulse = 0;   // start delay
@@ -22,6 +22,8 @@ XcisBore::XcisBore()
     accumulatedDataToken = 0x00000000;
 
     duration = 2000;
+
+    pulseCheckCounter = 0;
 }
 void XcisBore::initialise()
 {
@@ -43,8 +45,9 @@ void XcisBore::initialise()
     digitalWrite(BORE_OFF_LED,1); // LED OFF
     pulseCount = 0x00;
     currentValue = 0;
-    boreState = 0;
+    local_boreState = 0;
     boreStatus = 0;
+    pulseCheckCounter = 0;
 }
 
 void XcisBore::execute()
@@ -56,9 +59,17 @@ void XcisBore::execute()
         if (inputState_D20 == 1)
         {
             Serial.println("Got pulse");
+            pulseCheckCounter = 0;
             countPulses();
-            readCurrentValue();
         }
+    }
+    pulseCheckCounter++;
+    if (pulseCheckCounter > 5000)
+    {
+        // No pulse received for a while - store what I have and reset
+        Serial.println("RESETTING PULSE COUNT DUE TO INACTIVITY");
+        pulseCount = 0;
+        pulseCheckCounter = 0;
     }
     lastInputState_D20 = inputState_D20;
     // BORE ON SW
@@ -90,8 +101,10 @@ void XcisBore::execute()
         delayStartPulse += 900000; // 15 mins - normal value
         storePulseCount();
     }
+    readCurrentValue();
     calculateStatus();
     displayStatus();
+    
 }
 void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
 {
@@ -161,11 +174,65 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
 }
  void XcisBore::readCurrentValue()
  {
-    Serial.print("XcisBore::readCurrentValue:");
+  
     // Code to get the analog input value measuring current
-    currentValue = analogRead(CURRENT); // Read current
-    currentValue = 100; // Not working
+    float peakVoltage = 0;
+    float voltageVirtualValue = 0;
+    float ACCurrtntValue = 0;
+    float powerFactor = 1.0;
+    float acVoltage = 240;
+    int rawValue = 0;
+    int powerValue = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        peakVoltage += analogRead(CURRENT);   //read peak voltage                                                                      
+        delay(1);
+    }
+    peakVoltage = peakVoltage / 5;
+    voltageVirtualValue = peakVoltage * 0.707;
+    voltageVirtualValue = (voltageVirtualValue / 1024 * VREF ) / 2; 
+    ACCurrtntValue = voltageVirtualValue * ACTectionRange;
+    float actualPower = 0;
+    actualPower = powerFactor * ACCurrtntValue * acVoltage;
+    powerValue = actualPower;
+    currentValue = powerValue;
+ }
+ void XcisBore::readCurrentValue_debug()
+ {
+    Serial.println("XcisBore::readCurrentValue:");
+    // Code to get the analog input value measuring current
+    float peakVoltage = 0;
+    float voltageVirtualValue = 0;
+    float ACCurrtntValue = 0;
+    float powerFactor = 1.0;
+    float acVoltage = 240;
+    int rawValue = 0;
+    int powerValue = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        peakVoltage += analogRead(CURRENT);   //read peak voltage                                                                      
+        delay(1);
+    }
+    peakVoltage = peakVoltage / 5;
+    Serial.print("peakVoltage:");
+    Serial.println(peakVoltage); 
+    voltageVirtualValue = peakVoltage * 0.707;
+    Serial.print("voltageVirtualValueRaw:");
+    Serial.println(voltageVirtualValue);
+    voltageVirtualValue = (voltageVirtualValue / 1024 * VREF ) / 2; 
+    ACCurrtntValue = voltageVirtualValue * ACTectionRange;
+    float actualPower = 0;
+    actualPower = powerFactor * ACCurrtntValue * acVoltage;
+    Serial.print("ACCurrtntValue:");
+    Serial.println(ACCurrtntValue);
+    Serial.print("actualPower:");
+    Serial.println(actualPower);
+    powerValue = actualPower;
+    currentValue = powerValue;
+    //currentValue = voltageVirtualValue * 1000;
+    Serial.print("CurrentValue Decimal:");
     Serial.println(currentValue);
+
  }
 void XcisBore::turnOn()
 {
@@ -174,7 +241,8 @@ void XcisBore::turnOn()
     digitalWrite(ON_RELAY, HIGH);         // turn the Bore Shield Relay (D22) ON
     delay(duration);
     digitalWrite(ON_RELAY, LOW);         // turn the Bore Shield Relay (D22) off
-    boreState = 1; // Need to override this with a test on startup to check on bore state. Use Current?
+    local_boreState = 1; // THIS IS ON STATE
+    boreStatus = 5; // STARTING STATUS
     //digitalWrite(BORE_ON_LED,0); // LED ON
     //digitalWrite(BORE_OFF_LED,1); // LED OFF
 }
@@ -185,13 +253,20 @@ void XcisBore::turnOff()
     digitalWrite(OFF_RELAY, HIGH);         // turn the Bore Shield Relay (D23) ON
     delay(duration);
     digitalWrite(OFF_RELAY, LOW);         // turn the Bore Shield Relay (D23) off
-    boreState = 0;
+    local_boreState = 0; // THIS IS STOPPED STATE
+    boreStatus = 6; // STOPPING STATUS
     //digitalWrite(BORE_ON_LED,1); // LED OFF
     //digitalWrite(BORE_OFF_LED,0); // LED O
 }
 void XcisBore::countPulses()
 {
     pulseCount++;
+    Serial.print("Bore Status:");
+    Serial.println(boreStatus);
+    Serial.print("PulseCount:");
+    Serial.println(pulseCount);
+    Serial.print("CurrentValue:");
+    Serial.println(currentValue);
 }
 void XcisBore::storePulseCount()
 {
@@ -208,34 +283,32 @@ void XcisBore::storePulseCount()
 // if the bore is running 0 = off, 1= running, 2 = run_err_current, 3 = run_err_flow, 4 = run_err
 void XcisBore::calculateStatus()
 {
-
-    if ((boreState == 0 ))
+    if (/*(local_boreState == 0) && */((currentValue < CURRENT_THRESHOLD) && (pulseCount == 0)))  // STOPPED
     {
         boreStatus = 0;
+        // Could be running but an input fault - so leave local_boreState at 0 or 1, set only by inbound command
     }
-    else if ((boreState == 1) && (currentValue > CURRENT_THRESHOLD) && (pulseCount > 0))  // RUNNING OK 111
+    if (/*(local_boreState == 0) && */ ((currentValue > CURRENT_THRESHOLD) || (pulseCount > 0)))  // JUST STARTED STATE BY LOCAL CONTROL
     {
-        boreStatus = 1;
+        boreStatus = 1; 
     }
-    else if ((boreState == 1) && (currentValue < CURRENT_THRESHOLD) && (pulseCount > 0))  // RUNNING OK CURRENT_ERR 101
+ 
+    if (/*(local_boreState == 1) &&*/ ((currentValue < CURRENT_THRESHOLD) && (pulseCount > 0)))  // RUNNING OK CURRENT_ERR 101
     {
-        boreStatus = 2;
+        boreStatus = 2; 
     }
-    else if ((boreState == 1) && (currentValue > CURRENT_THRESHOLD) && (pulseCount == 0))  // RUNNING OK FLOW_ERR 110
+    if (/*(local_boreState == 1) &&*/ ((currentValue > CURRENT_THRESHOLD) && (pulseCount == 0)))  // RUNNING OK FLOW_ERR 110
     {
         boreStatus = 3;
-    }
-    else // Running but have a general err - both current and flow not working
-    {
-        boreStatus = 4;
     }
 }
 void XcisBore::displayStatus()
 {
+
     if (boreStatus == 0) // STOPPED
     {
         digitalWrite(BORE_ON_LED,1); // LED OFF
-        digitalWrite(BORE_OFF_LED,0); // LED O
+        digitalWrite(BORE_OFF_LED,0); // LED ON
     }
     else if(boreStatus == 1) // RUNNING OK
     {

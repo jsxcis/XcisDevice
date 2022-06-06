@@ -16,5 +16,6 @@ class Sensor {
         uint16_t getVoltageBytes();
 
         XcisMessage xcisMessage;
+        
 };
 #endif

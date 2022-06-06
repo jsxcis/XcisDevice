@@ -83,6 +83,12 @@ void Device::initialise(String board)
             pSensor = new XcisFlowMeter();
             break;
         }
+        case TEST_MODE: //111 SW 000
+        {
+            Serial.println("TEST_MODE");
+            pSensor = new XcisTestMode();
+            break;
+        }
         default:
         {
             Serial.println("DeviceConfiguration=UNKNOWN");
