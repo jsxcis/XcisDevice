@@ -53,6 +53,7 @@ void PMEM::initialise()
 void PMEM::reset()
 {
     Serial.println("PMEM::reset()");
+    
     lorastate ls;
     ls.loraID = 0xFE;
     ls.initFlag = 0x00;
