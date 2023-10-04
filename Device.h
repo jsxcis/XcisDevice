@@ -53,6 +53,7 @@ class Device
     Sensor* getSensor() {return pSensor;}
     uint32_t getUID(){return uid_d;}
     bool getLoraInitState(){return pmem.getInitState();}
+    void setLoraID(uint8_t loraID);
 
     private:
     Device();
@@ -66,6 +67,7 @@ class Device
     uint8_t deviceType;
     uint8_t loraID;
     uint32_t uid_d;
+    int mode;
 
    
 };

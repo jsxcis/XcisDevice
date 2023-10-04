@@ -10,6 +10,8 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Radio::Radio()
 {
     address = 0; // For EEPROM
+    delayStart = 0;   // start delay
+    delayRunning = 0; // not finished yet
     
 
 }
@@ -29,6 +31,9 @@ void Radio::initialise(uint8_t loraID)
 {
     Serial.print("Radio::initialise with loraID:");
     Serial.println(loraID);
+
+    delayStart = millis();   // start delay
+    delayRunning = true; // not finished yet
 
     pinMode(LORA,OUTPUT); 
     digitalWrite(LORA,0);//  LED off
@@ -86,6 +91,13 @@ void Radio::onReceive(Sensor *pSensor)
         xcisMessage.dumpHex(responseData,XCIS_RH_MESH_MAX_MESSAGE_LEN);
       }
     }
+    else if (xcisMessage.getCommand() == SET_SENSOR_LORAID)
+    {
+      // This is a broadcast message to check for new devices
+      Serial.println("Device Received:SET_SENSOR_LORAID");
+      pSensor->processMessage(buf,responseData);
+
+    }
     else
     {
       pSensor->processMessage(buf,responseData);
@@ -93,6 +105,30 @@ void Radio::onReceive(Sensor *pSensor)
     }
     digitalWrite(LORA,1);
   }
+  return;
+}
+void Radio::sendID(Sensor *pSensor)
+{
+  uint8_t buf[32] = {0};
+  uint8_t len = sizeof(buf);
+  uint8_t from;
+  uint8_t responseData[32];
+
+  if (delayRunning && ((millis() - delayStart) >= 10000))// 10 secs 
+  {
+     digitalWrite(LORA,1);
+      delayStart +=10000; // 10 secs
+      // Send hunting message - looking for a gateway
+      Serial.println("Device not initialised!! - sending hunting message data");
+  
+      xcisMessage.createStatusPayload(STATUS_RESPONSE, Device::Instance()->getUID(),Device::Instance()->getDeviceType() );
+      xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), Device::Instance()->getDeviceType(), STATUS_RESPONSE);
+      manager->sendtoWait(responseData, sizeof(responseData), from);
+      Serial.print("Response:");
+      xcisMessage.dumpHex(responseData,XCIS_RH_MESH_MAX_MESSAGE_LEN);
+  
+  }
+  digitalWrite(LORA,0);
   return;
 }
 void Radio::setLoraDefault()

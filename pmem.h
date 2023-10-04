@@ -17,6 +17,7 @@ class PMEM
     void initialise();
     void reset();
     void setLoraID(uint8_t loraID);
+    void displayPMEM();
     uint8_t getLoraID();
     bool getInitState();
 

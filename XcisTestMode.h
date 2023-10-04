@@ -26,6 +26,7 @@ class XcisTestMode : public Sensor {
         XcisTestMode();
         void initialise();
         void execute();
+        void execute(int mode){;}
         void processMessage(uint8_t *data, uint8_t *responseData);
 
     private:

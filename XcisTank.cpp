@@ -24,6 +24,15 @@ void XcisTank::execute()
         readDataStream();
     }
 }
+void XcisTank::execute(int mode)
+{
+    if (delayRunning && ((millis() - delayStart) >= 10000))// 10 secs 
+    {
+        delayStart +=10000; // 10 secs
+        // Send hunting message - looking for a gateway
+        Serial.println("Sending hunting message");
+    }
+}
 void XcisTank::processMessage(uint8_t *data , uint8_t *responseData)
 {
     uint8_t recvPayload[28];

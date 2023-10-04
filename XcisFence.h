@@ -19,6 +19,7 @@ class XcisFence : public Sensor {
         XcisFence();
         void initialise();
         void execute();
+        void execute(int mode){;}
         void processMessage(uint8_t *data, uint8_t *responseData);
 
     private:

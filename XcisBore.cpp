@@ -171,6 +171,26 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
       duration = control.value;
       turnOff();
     }
+    if (xcisMessage.getCommand() == SET_SENSOR_LORAID)
+    {
+      Serial.println("XcisBore::processMessage:SET_SENSOR_LORAID");
+      sensor_update_loraID_request update;
+      uint32_t myUid;
+      xcisMessage.processUpdatePayload(update);
+      Serial.println(update.newLoraID,HEX);
+      Serial.println(update.deviceUID,HEX);
+      myUid =  Device::Instance()->getUID();
+      Serial.println(myUid,HEX);
+      if (myUid == update.deviceUID)
+      {
+        Serial.println("UID Match");
+        Device::Instance()->setLoraID(update.newLoraID);
+      }
+      else
+      {
+        return;
+      }
+    } 
 }
  void XcisBore::readCurrentValue()
  {

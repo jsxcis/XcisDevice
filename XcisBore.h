@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include <XcisMessage.h>
 #include <SoftwareSerial.h>
+#include "Device.h"
 
 #define PULSE 20 // CHIP PIN 27 BLUE
 #define CURRENT A4 // Current Sensor input
@@ -26,6 +27,7 @@ class XcisBore : public Sensor {
         XcisBore();
         void initialise();
         void execute();
+        void execute(int mode){;}
         void processMessage(uint8_t *data, uint8_t *responseData);
 
     private:

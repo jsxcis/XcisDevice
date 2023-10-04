@@ -53,13 +53,22 @@ void PMEM::initialise()
 void PMEM::reset()
 {
     Serial.println("PMEM::reset()");
-    
+
     lorastate ls;
     ls.loraID = 0xFE;
     ls.initFlag = 0x00;
     //EEPROM.write(addr,ls.loraID);
     //EEPROM.write(addr + sizeof(ls.loraID),ls.initFlag);
     EEPROM_writeAnything(0,ls);
+}
+void PMEM::displayPMEM()
+{ 
+    lorastate ls;
+    EEPROM_readAnything(addr,ls);
+    Serial.print("displayPMEM:");
+    Serial.print(ls.loraID);
+    Serial.print(",");
+    Serial.println(ls.initFlag);
 }
 void PMEM::setLoraID(uint8_t loraID)
 {

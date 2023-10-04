@@ -46,6 +46,8 @@ class Radio
     void sayHello();
     void initialise(uint8_t loraID);
     void onReceive(Sensor *pSensor);
+    void sendID(Sensor *pSensor);
+
     XcisMessage xcisMessage;
 
     private:
@@ -69,6 +71,10 @@ class Radio
     String node_id_default; // Default Lora ID
     unsigned int node_id_mesh_default; // Default Lora ID   
     uint8_t deviceType;
+
+    unsigned long delayStart; // the time the delay started
+
+    bool delayRunning; // true if still waiting for delay to finish
    
 };
 #endif

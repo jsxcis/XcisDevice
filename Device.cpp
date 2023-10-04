@@ -5,6 +5,7 @@ Device* Device::m_pInstance = NULL;
 Device::Device()
 {
     uid_d = 0x00000000;
+    mode = 0; // Default to no activity = 0, 1 = sensing, 2 = hunting 
 
 }
 Device* Device::Instance()
@@ -31,11 +32,23 @@ void Device::initialise(String board)
         
     uid.initialise();
     pmem.initialise();
-    pmem.reset(); // remove this line - testing only
-    pmem.setLoraID(0x16); // Decimal 22
+    //pmem.reset(); // remove this line - testing only
+    pmem.displayPMEM();
+    // Manual loraID setting.
+    //pmem.setLoraID(0x16); // Decimal 22 
    
 
     Serial.println(pmem.getInitState());
+    if (getLoraInitState() == false)
+    {
+        Serial.println("NO LORA ID: Entering hunting mode using LORAID:254");
+        mode = 2;
+    }
+    if (getLoraInitState()== true)
+    {
+        Serial.println("FOUND LORA ID: Entering sensing mode");
+        mode = 1;
+    }
     uid_d = uid.readID();
     deviceType = readDIPSwitches();
    
@@ -103,13 +116,32 @@ void Device::initialise(String board)
     Serial.print(" Board:");
     Serial.println(board);  
 }
-void Device::onReceive()
+void Device::onReceive() // called from main loop
 {
      Radio::Instance()->onReceive(pSensor);
 }
-void Device::execute()
+void Device::execute() // Called from main loop
 {
-    pSensor->execute();
+    if (mode == 1)
+    {
+        // In sensing mode (normal)
+        //Serial.println("Sensing mode");
+        pSensor->execute();
+    }
+    else if (mode == 0)
+    {
+        // Passive mode
+        // In sensing mode (normal)
+        //Serial.println("Passive mode");
+        
+    }
+    else if (mode == 2)
+    {
+        //Serial.println("Hunting mode");
+        // Use the radio to send a hunting message
+        //Radio::Instance()->sendID(pSensor);
+        
+    }
 }
 uint8_t Device::readDIPSwitches()
 {
@@ -130,4 +162,10 @@ uint8_t Device::readDIPSwitches()
     } 
     Serial.println(result,HEX);
     return result;
+}
+void Device::setLoraID(uint8_t loraID)
+{
+    Serial.print("Device::setLoraID:");
+    Serial.println(loraID);
+    pmem.setLoraID(loraID);
 }
