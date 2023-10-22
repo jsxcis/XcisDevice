@@ -93,7 +93,7 @@ void Radio::onReceive(Sensor *pSensor)
     }
     else if (xcisMessage.getCommand() == SET_SENSOR_LORAID)
     {
-      // This is a broadcast message to check for new devices
+      // This is a message update the loraID
       Serial.println("Device Received:SET_SENSOR_LORAID");
       pSensor->processMessage(buf,responseData);
 

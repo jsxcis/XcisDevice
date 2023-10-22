@@ -29,6 +29,10 @@ void Device::initialise(String board)
 
     pinMode(SENSOR_STATUS,OUTPUT);
     digitalWrite(SENSOR_STATUS,0); // LED ON
+
+    pinMode(DEFAULT,INPUT);
+
+    getDefaultSwitch();
         
     uid.initialise();
     pmem.initialise();
@@ -116,6 +120,104 @@ void Device::initialise(String board)
     Serial.print(" Board:");
     Serial.println(board);  
 }
+void Device::initialise()
+{
+    Serial.println("Device::initialise");
+    randomSeed(analogRead(0)); // Seed the random number generator
+    pinMode(STATUS,OUTPUT); 
+    digitalWrite(STATUS,1);// LED off
+
+    pinMode(SENSOR_STATUS,OUTPUT);
+    digitalWrite(SENSOR_STATUS,0); // LED ON
+
+    pinMode(DEFAULT,INPUT);
+
+    getDefaultSwitch();
+        
+    uid.initialise();
+    pmem.initialise();
+    //pmem.reset(); // remove this line - testing only
+    pmem.displayPMEM();
+    // Manual loraID setting.
+    //pmem.setLoraID(0x16); // Decimal 22 
+   
+
+    Serial.println(pmem.getInitState());
+    if (getLoraInitState() == false)
+    {
+        Serial.println("NO LORA ID: Entering hunting mode using LORAID:254");
+        mode = 2;
+    }
+    if (getLoraInitState()== true)
+    {
+        Serial.println("FOUND LORA ID: Entering sensing mode");
+        mode = 1;
+    }
+    uid_d = uid.readID();
+    deviceType = readDIPSwitches();
+   
+    switch(deviceType)
+    {
+        case TANK: // 000 SW 111
+        {
+            Serial.println("DeviceConfiguration=TANK");
+            pSensor = new XcisTank();
+            break;
+        }
+        case TROUGH: // 001 SW 011
+        {
+            Serial.println("DeviceConfiguration=TROUGH");
+             pSensor = new XcisTrough();
+             break;
+        }
+        case BORE_CONTROLLER: //010 SW 101
+        {
+            Serial.println("DeviceConfiguration=BORE_CONTROLLER");
+            pSensor = new XcisBore();
+            break;
+        }
+        case WEATHER_SENSOR: //011
+        {
+            Serial.println("DeviceConfiguration=WEATHER_SENSOR");
+             // CAUTION NOT IMPLEMENTED
+             break;
+        }
+        case RAIN_GAUGE: //100 SW 110
+        {
+            Serial.println("DeviceConfiguration=RAIN_GAUGE");
+            pSensor = new XcisRainGauge();
+            break;
+        }
+        case FENCE: //101 SW 010
+        {
+            Serial.println("DeviceConfiguration=FENCE");
+            pSensor = new XcisFence();
+            break;
+        }
+        case FLOW_METER: //110 SW 100
+        {
+            Serial.println("DeviceConfiguration=FLOW_METER");
+            pSensor = new XcisFlowMeter();
+            break;
+        }
+        case TEST_MODE: //111 SW 000
+        {
+            Serial.println("TEST_MODE");
+            pSensor = new XcisTestMode();
+            break;
+        }
+        default:
+        {
+            Serial.println("DeviceConfiguration=UNKNOWN");
+             // CAUTION NOT IMPLEMENTED
+            break;
+        }
+    }
+    pSensor->initialise();
+    Radio::Instance()->initialise(pmem.getLoraID());
+    digitalWrite(STATUS,0);// LED ON
+    Serial.print(F("Ready"));
+}
 void Device::onReceive() // called from main loop
 {
      Radio::Instance()->onReceive(pSensor);
@@ -163,9 +265,34 @@ uint8_t Device::readDIPSwitches()
     Serial.println(result,HEX);
     return result;
 }
+void Device::getDefaultSwitch()
+{
+    uint8_t def;
+    def = digitalRead(DEFAULT);
+    Serial.print("Default:");
+    Serial.println(def);
+    if (def == 0)
+    {
+        setDefaults();
+    }
+}
+void Device::setDefaults()
+{
+    Serial.println("Setting Defaults");
+    pmem.reset();
+}
 void Device::setLoraID(uint8_t loraID)
 {
     Serial.print("Device::setLoraID:");
     Serial.println(loraID);
     pmem.setLoraID(loraID);
+}
+void Device::restart()
+{
+  Serial.println("Restart called");
+  {
+    noInterrupts();
+    wdt_enable(WDTO_15MS);
+    while(1);
+  }
 }

@@ -185,6 +185,8 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
       {
         Serial.println("UID Match");
         Device::Instance()->setLoraID(update.newLoraID);
+        // Need to restart the sensor to reset the radio
+        Device::Instance()->initialise();
       }
       else
       {

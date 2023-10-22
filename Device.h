@@ -13,12 +13,16 @@
 #include "XcisBore.h"
 #include "XcisTestMode.h"
 #include "pmem.h"
+#include <avr/wdt.h>
+#include <TimeLib.h>
 
 
 // Configuration switch
 #define SW1 12
 #define SW2 13
 #define SW3 14
+// Default switch
+#define DEFAULT 15
 
 //opcodes
 #define WREN  0x06 // write enable command
@@ -47,6 +51,7 @@ class Device
   
     void sayHello();
     void initialise(String board);
+    void initialise();
     void onReceive();
     void execute();
     uint8_t getDeviceType() {return deviceType;}
@@ -54,6 +59,9 @@ class Device
     uint32_t getUID(){return uid_d;}
     bool getLoraInitState(){return pmem.getInitState();}
     void setLoraID(uint8_t loraID);
+    void restart();
+    void getDefaultSwitch();
+    void setDefaults();
 
     private:
     Device();
@@ -67,6 +75,7 @@ class Device
     uint8_t deviceType;
     uint8_t loraID;
     uint32_t uid_d;
+   
     int mode;
 
    
