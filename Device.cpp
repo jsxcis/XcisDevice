@@ -39,7 +39,8 @@ void Device::initialise(String board)
     //pmem.reset(); // remove this line - testing only
     pmem.displayPMEM();
     // Manual loraID setting.
-    //pmem.setLoraID(0x16); // Decimal 22 
+    //Serial.println("*******Manual Lora Setting**********");
+    //pmem.setLoraID(0x17); // Decimal 23
    
 
     Serial.println(pmem.getInitState());
@@ -120,7 +121,7 @@ void Device::initialise(String board)
     Serial.print(" Board:");
     Serial.println(board);  
 }
-void Device::initialise()
+void Device::initialise() // Dont this  is used.
 {
     Serial.println("Device::initialise");
     randomSeed(analogRead(0)); // Seed the random number generator
@@ -139,7 +140,8 @@ void Device::initialise()
     //pmem.reset(); // remove this line - testing only
     pmem.displayPMEM();
     // Manual loraID setting.
-    //pmem.setLoraID(0x16); // Decimal 22 
+    //Serial.println("*******Manual Lora Setting**********");
+    //pmem.setLoraID(0x17); // Decimal 23 
    
 
     Serial.println(pmem.getInitState());

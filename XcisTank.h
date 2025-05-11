@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include <XcisMessage.h>
 #include <SoftwareSerial.h>
+#include "Device.h"
 
 
 #define SERIAL_RX 20 // CHIP PIN 26 GREEN
