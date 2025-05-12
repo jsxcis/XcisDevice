@@ -18,7 +18,7 @@ Device* Device::Instance()
 }
 void Device::sayHello()
 {
-    Serial.println("Device::Hello");
+    //Serial.println("Device::Hello");
 }
 void Device::initialise(String board)
 {
