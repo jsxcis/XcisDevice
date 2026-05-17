@@ -10,17 +10,19 @@ XcisTank::XcisTank()
 }
 void XcisTank::initialise()
 {
-    Serial.println("XcisTank::initialise");
+    Serial.println("XcisTank::initialise new2");
     delayStart = millis();   // start delay
     delayRunning = true; // not finished yet
+  
     usonic_tank.begin(9600);
 }
 void XcisTank::execute()
 {
     
-    if (delayRunning && ((millis() - delayStart) >= 100))// 5 secs 
+    if (delayRunning && ((millis() - delayStart) >= 100))// 100 ms  
     {
-        delayStart +=100; // 5 secs
+        delayStart +=100; // 100 ms
+        // Send hunting message - looking for a gateway
         readDataStream();
     }
 }
@@ -39,6 +41,7 @@ void XcisTank::processMessage(uint8_t *data , uint8_t *responseData)
 
 
     Serial.print("XcisTank::processMessage:");
+    
     xcisMessage.dumpHex(data,XCIS_RH_MESH_MAX_MESSAGE_LEN);
     xcisMessage.processMessage(data);
     Serial.print(" LocationID:");
@@ -96,6 +99,8 @@ void XcisTank::readDataStream()
   unsigned char incomingByte = 0;
   int byteCount = 0;
   bool foundPacket = false;
+  usonic_tank.flush(); // Clear any previous data in the buffer
+
   while (usonic_tank.available() > 0) 
   {
     // read the incoming byte:
@@ -133,4 +138,6 @@ void XcisTank::readDataStream()
       //Serial.println(F("ERROR"));
     }
   }
+ 
+
 }

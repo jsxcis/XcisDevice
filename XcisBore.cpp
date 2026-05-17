@@ -53,25 +53,27 @@ void XcisBore::initialise()
 void XcisBore::execute()
 {
     // FLOW PULSE INPUT
-    inputState_D20 = digitalRead(PULSE);
-    if (inputState_D20 != lastInputState_D20)
-    {
-        if (inputState_D20 == 1)
-        {
-            Serial.println("Got pulse");
-            pulseCheckCounter = 0;
-            countPulses();
-        }
-    }
-    pulseCheckCounter++;
-    if (pulseCheckCounter > 5000)
-    {
+    //inputState_D20 = digitalRead(PULSE);
+    //if (inputState_D20 != lastInputState_D20)
+    //{
+    //    if (inputState_D20 == 1)
+    //    {
+    //        Serial.println("Got pulse");
+    //        pulseCheckCounter = 0;
+    //        countPulses();
+    //    }
+    //}
+    /*
+    //pulseCheckCounter++;
+    //if (pulseCheckCounter > 5000)
+    //{
         // No pulse received for a while - store what I have and reset
-        Serial.println("RESETTING PULSE COUNT DUE TO INACTIVITY");
-        pulseCount = 0;
-        pulseCheckCounter = 0;
+        //Serial.println("RESETTING PULSE COUNT DUE TO INACTIVITY");
+        //pulseCount = 0;
+        //pulseCheckCounter = 0;
     }
-    lastInputState_D20 = inputState_D20;
+    */
+    //lastInputState_D20 = inputState_D20;
     // BORE ON SW
     inputState_D18 = digitalRead(BORE_ON_SW);
     if (inputState_D18 != lastInputState_D18)
@@ -99,7 +101,7 @@ void XcisBore::execute()
     if (delayRunning && ((millis() - delayStartPulse) >= 900000))// 15 mins 
     {
         delayStartPulse += 900000; // 15 mins - normal value
-        storePulseCount();
+        //storePulseCount();
     }
     readCurrentValue();
     calculateStatus();
@@ -137,17 +139,19 @@ void XcisBore::processMessage(uint8_t *data , uint8_t *responseData)
       Serial.print("Bore Status:");
       Serial.println(boreStatus,HEX);
 
-      Serial.print("Pulses Integer:");
-      Serial.println(accumulatedPulses);
-      Serial.print("Pulses Hex:");
-      Serial.println(accumulatedPulses,HEX);
+      // No longer used - using flowmeter instead
+      //Serial.print("Pulses Integer:");
+      //Serial.println(accumulatedPulses);
+      //Serial.print("Pulses Hex:");
+      //Serial.println(accumulatedPulses,HEX);
       
-      Serial.print("accumulatedDataToken Integer:");
-      Serial.println(accumulatedDataToken);
-      Serial.print("accumulatedDataToken Hex:");
-      Serial.println(accumulatedDataToken,HEX);
+      //Serial.print("accumulatedDataToken Integer:");
+      //Serial.println(accumulatedDataToken);
+      //Serial.print("accumulatedDataToken Hex:");
+      //Serial.println(accumulatedDataToken,HEX);
 
-      xcisMessage.createBorePayload(SENSOR_DATA_RESPONSE, battery, currentValue, accumulatedPulses, accumulatedDataToken, boreStatus);  
+      //xcisMessage.createBorePayload(SENSOR_DATA_RESPONSE, battery, currentValue, accumulatedPulses, accumulatedDataToken, boreStatus);
+      xcisMessage.createBorePayload(SENSOR_DATA_RESPONSE, battery, currentValue, boreStatus);  
       xcisMessage.createMessage(responseData,xcisMessage.getLocationID(), BORE_CONTROLLER, SENSOR_DATA_RESPONSE);
   
       Serial.print("Response:");
@@ -305,24 +309,30 @@ void XcisBore::storePulseCount()
 // if the bore is running 0 = off, 1= running, 2 = run_err_current, 3 = run_err_flow, 4 = run_err
 void XcisBore::calculateStatus()
 {
+    pulseCount = 0; // Remove as using flowmeter externally
     if (/*(local_boreState == 0) && */((currentValue < CURRENT_THRESHOLD) && (pulseCount == 0)))  // STOPPED
     {
         boreStatus = 0;
         // Could be running but an input fault - so leave local_boreState at 0 or 1, set only by inbound command
     }
-    if (/*(local_boreState == 0) && */ ((currentValue > CURRENT_THRESHOLD) || (pulseCount > 0)))  // JUST STARTED STATE BY LOCAL CONTROL
+    //if (/*(local_boreState == 0) && */ ((currentValue > CURRENT_THRESHOLD) || (pulseCount > 0)))  // JUST STARTED STATE BY LOCAL CONTROL
+    if (/*(local_boreState == 0) && */ (currentValue > CURRENT_THRESHOLD))  // Running OK
     {
         boreStatus = 1; 
     }
  
-    if (/*(local_boreState == 1) &&*/ ((currentValue < CURRENT_THRESHOLD) && (pulseCount > 0)))  // RUNNING OK CURRENT_ERR 101
-    {
-        boreStatus = 2; 
-    }
-    if (/*(local_boreState == 1) &&*/ ((currentValue > CURRENT_THRESHOLD) && (pulseCount == 0)))  // RUNNING OK FLOW_ERR 110
-    {
-        boreStatus = 3;
-    }
+    // Remove as using flowmeter externally
+    //if (/*(local_boreState == 1) &&*/ ((currentValue < CURRENT_THRESHOLD) && (pulseCount > 0)))  // RUNNING OK CURRENT_ERR 101
+    //{
+    //    boreStatus = 2;
+    //    
+    //}
+
+    //if (/*(local_boreState == 1) &&*/ ((currentValue > CURRENT_THRESHOLD) && (pulseCount == 0)))  // RUNNING OK FLOW_ERR 110
+    //{
+    //    boreStatus = 3;// Remove as using flowmeter externally
+    //    
+    //}
 }
 void XcisBore::displayStatus()
 {

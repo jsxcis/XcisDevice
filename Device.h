@@ -12,17 +12,40 @@
 #include "XcisFence.h"
 #include "XcisBore.h"
 #include "XcisTestMode.h"
+#include "XcisWeather.h"
+#include "XcisWindSensor.h"
 #include "pmem.h"
 #include <avr/wdt.h>
 #include <TimeLib.h>
 
-
-// Configuration switch
+#ifdef ARDUINO_AVR_UNO
+#define SW1 11
+#define SW2 12
+#define SW3 13
+#define DEFAULT 7
+#elif ARDUINO_AVR_MEGA2560
+#define SW1 11
+#define SW2 12
+#define SW3 13
+#define DEFAULT 7
+#elif __AVR_ATmega1284P__
 #define SW1 12
 #define SW2 13
 #define SW3 14
-// Default switch
 #define DEFAULT 15
+#elif __AVR_ATmega1284__
+#define SW1 12
+#define SW2 13
+#define SW3 14
+#define DEFAULT 15
+#endif
+
+// Configuration switchs atmega1284p
+//#define SW1 12
+//#define SW2 13
+//#define SW3 14
+// Default switch
+//#define DEFAULT 15
 
 //opcodes
 #define WREN  0x06 // write enable command
@@ -42,6 +65,7 @@
 // Analog LED for Sensor Status
 #define SENSOR_STATUS A1 // STATUS LED - DEVICE ACTIVE - PWR ON
 
+#define DEFAULT_LORA_ID 0x05 // Used to hard code the LORA ID = decimal 28
 
 
 class Device
@@ -75,6 +99,8 @@ class Device
     uint8_t deviceType;
     uint8_t loraID;
     uint32_t uid_d;
+    bool defaultLoraID;
+    bool defaultUID; // Set to false for normal operation
    
     int mode;
 

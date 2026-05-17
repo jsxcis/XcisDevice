@@ -54,6 +54,7 @@ void Radio::initialise(uint8_t loraID)
     else
     {
       Serial.println("Radio initialised");
+      rf95.setFrequency(915.0);
       digitalWrite(LORA,1);//  LED OFF
     }
 }
@@ -64,7 +65,6 @@ void Radio::onReceive(Sensor *pSensor)
   uint8_t from;
   uint8_t responseData[32];
 
-  
   if (manager->recvfromAck(buf, &len, &from))
   {
     // Assume message is for me.

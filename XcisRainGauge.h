@@ -3,6 +3,7 @@
 #include "Sensor.h"
 #include "Arduino.h"
 #include <XcisMessage.h>
+#include "Device.h"
 
 // Digital PIN for Pulse Inpit
 #define PULSE 20

@@ -6,7 +6,8 @@ Device::Device()
 {
     uid_d = 0x00000000;
     mode = 0; // Default to no activity = 0, 1 = sensing, 2 = hunting 
-
+    defaultLoraID = false; // Set to true for manual Lora ID setting
+    defaultUID = false;// Set to false for normal operation
 }
 Device* Device::Instance()
 {
@@ -22,6 +23,7 @@ void Device::sayHello()
 }
 void Device::initialise(String board)
 {
+   
     Serial.println("Device::initialise:" + board);
     randomSeed(analogRead(0)); // Seed the random number generator
     pinMode(STATUS,OUTPUT); 
@@ -39,9 +41,11 @@ void Device::initialise(String board)
     //pmem.reset(); // remove this line - testing only
     pmem.displayPMEM();
     // Manual loraID setting.
-    //Serial.println("*******Manual Lora Setting**********");
-    //pmem.setLoraID(0x17); // Decimal 23
-   
+    if (defaultLoraID == true)
+    {
+        Serial.println("*******Manual Lora Setting**********");
+        pmem.setLoraID(DEFAULT_LORA_ID); // Decimal 23
+    }
 
     Serial.println(pmem.getInitState());
     if (getLoraInitState() == false)
@@ -54,7 +58,22 @@ void Device::initialise(String board)
         Serial.println("FOUND LORA ID: Entering sensing mode");
         mode = 1;
     }
-    uid_d = uid.readID();
+    // Read the UID from the UID class or use default UID if not set
+    // This is used to set the Lora ID
+    // If the UID is not set, it will be read from the UID class    
+    if (defaultUID == true)
+    {
+        Serial.println("*******Manual UID Setting**********");
+        uid_d = 55556; // Default UID for testing
+    }
+    else
+    {
+        Serial.println("Reading UID from device");
+        uid_d = uid.readID();
+    }
+    Serial.print("UID:");
+    Serial.println(uid_d, HEX);
+
     deviceType = readDIPSwitches();
    
     switch(deviceType)
@@ -80,6 +99,7 @@ void Device::initialise(String board)
         case WEATHER_SENSOR: //011
         {
             Serial.println("DeviceConfiguration=WEATHER_SENSOR");
+            pSensor = new XcisWeather();
              // CAUTION NOT IMPLEMENTED
              break;
         }
@@ -101,10 +121,12 @@ void Device::initialise(String board)
             pSensor = new XcisFlowMeter();
             break;
         }
-        case TEST_MODE: //111 SW 000
-        {
-            Serial.println("TEST_MODE");
-            pSensor = new XcisTestMode();
+        case WIND_SENSOR: //111 SW 000 Used to be test mode
+        {   
+            Serial.println("DeviceConfiguration=WIND_SENSOR");
+            pSensor = new XcisWindSensor(); 
+            //Serial.println("TEST_MODE");
+            //pSensor = new XcisTestMode();
             break;
         }
         default:
@@ -140,9 +162,11 @@ void Device::initialise() // Dont this  is used.
     //pmem.reset(); // remove this line - testing only
     pmem.displayPMEM();
     // Manual loraID setting.
-    //Serial.println("*******Manual Lora Setting**********");
-    //pmem.setLoraID(0x17); // Decimal 23 
-   
+    if (defaultLoraID == true)
+    {
+        Serial.println("*******Manual Lora Setting**********");
+        pmem.setLoraID(DEFAULT_LORA_ID); // Decimal 29 
+    }
 
     Serial.println(pmem.getInitState());
     if (getLoraInitState() == false)
@@ -202,7 +226,12 @@ void Device::initialise() // Dont this  is used.
             pSensor = new XcisFlowMeter();
             break;
         }
-        case TEST_MODE: //111 SW 000
+        case WIND_SENSOR: //111 SW 000 used to be test mode
+        {
+            Serial.println("DeviceConfiguration=WIND_SENSOR");
+            pSensor = new XcisWindSensor();
+            break;
+        }
         {
             Serial.println("TEST_MODE");
             pSensor = new XcisTestMode();

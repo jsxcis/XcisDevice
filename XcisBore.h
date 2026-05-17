@@ -47,8 +47,8 @@ class XcisBore : public Sensor {
         uint16_t currentValue;
         uint8_t local_boreState; // true if the bore is running 0 = off, 1= running
         uint8_t boreStatus; // true if the bore is running 0 = off, 1= running, 2 = run_err_current, 3 = run_err_flow, 4 = run_err
-        uint16_t accumulatedPulses;
-        uint32_t accumulatedDataToken;
+        uint16_t accumulatedPulses; // Removed as using flowmeter
+        uint32_t accumulatedDataToken; // Removed as using flowmeter
         uint16_t duration;
         int inputState_D20;
         int lastInputState_D20;

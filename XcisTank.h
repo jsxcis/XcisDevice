@@ -9,6 +9,7 @@
 
 #define SERIAL_RX 20 // CHIP PIN 26 GREEN
 #define SERIAL_TX 21 // CHIP PIN 27 BLUE
+#define SENSOR_PWR 23
 
 class XcisTank : public Sensor {
     public:
